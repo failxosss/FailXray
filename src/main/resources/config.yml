@@ -1,8 +1,8 @@
-# Dosah v blocich
+# Radius in blocks
 radius: 200
-# Jak casto se aktualizuje (v tickech, 40 = 2 sekundy)
+# Update interval in ticks (40 = 2 seconds)
 update-interval-ticks: 40
-# Maximalni pocet zobrazenych rud naraz (nejblizsi maji prednost)
+# Maximum number of ores shown at once (nearest ones have priority)
 max-entities: 2000
-# Kolik chunku se za 1 tick naskenuje (vetsi = rychlejsi prvni sken, vetsi zatez)
+# How many chunks are scanned per tick (higher = faster first scan, more load)
 chunks-per-tick: 4

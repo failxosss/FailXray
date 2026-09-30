@@ -29,7 +29,7 @@ jobs:
           name: XRay
           path: target/XRay-*.jar
 
-      - name: Release (jen pro tagy v*)
+      - name: Release (tags v* only)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:

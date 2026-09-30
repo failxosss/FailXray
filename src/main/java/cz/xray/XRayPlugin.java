@@ -74,31 +74,31 @@ public final class XRayPlugin extends JavaPlugin implements Listener, CommandExe
         sessions.clear();
     }
 
-    // ---------- příkaz ----------
+    // ---------- command ----------
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player p)) {
-            sender.sendMessage("Tento příkaz může použít jen hráč.");
+            sender.sendMessage("Only players can use this command.");
             return true;
         }
         if (!p.hasPermission("xray.use")) {
-            p.sendMessage("§cNemáš oprávnění.");
+            p.sendMessage("§cYou don't have permission.");
             return true;
         }
         Session existing = sessions.remove(p.getUniqueId());
         if (existing != null) {
             clear(existing);
-            p.sendMessage("§cXRay vypnut.");
+            p.sendMessage("§cXRay disabled.");
         } else {
             sessions.put(p.getUniqueId(), new Session());
-            p.sendMessage("§aXRay zapnut §7(dosah " + radius + " bloků, aktualizace každé 2 s).");
+            p.sendMessage("§aXRay enabled §7(radius " + radius + " blocks, updates every 2 s).");
             refresh(p, sessions.get(p.getUniqueId()));
         }
         return true;
     }
 
-    // ---------- aktualizace ----------
+    // ---------- updating ----------
 
     private void updateAll() {
         Iterator<Map.Entry<UUID, Session>> it = sessions.entrySet().iterator();
@@ -148,7 +148,7 @@ public final class XRayPlugin extends JavaPlugin implements Listener, CommandExe
         for (OrePos o : candidates) {
             if (keep.size() >= maxEntities) break;
             if (!w.isChunkLoaded(o.x() >> 4, o.z() >> 4)) continue;
-            // ruda už tam není (vytěžená / změněná) -> přeskenovat chunk
+            // ore is gone (mined / changed) -> rescan chunk
             if (w.getBlockAt(o.x(), o.y(), o.z()).getType() != o.type()) {
                 wc.remove(chunkKey(o.x() >> 4, o.z() >> 4));
                 continue;
@@ -175,12 +175,12 @@ public final class XRayPlugin extends JavaPlugin implements Listener, CommandExe
     private BlockDisplay spawnMarker(Player viewer, World w, OrePos o) {
         Location loc = new Location(w, o.x(), o.y(), o.z());
         BlockDisplay d = w.spawn(loc, BlockDisplay.class, bd -> {
-            bd.setVisibleByDefault(false); // vidí ho jen admin
+            bd.setVisibleByDefault(false); // only the admin can see it
             bd.setPersistent(false);
             bd.setBlock(o.type().createBlockData());
             bd.setGlowing(true);
             bd.setGlowColorOverride(colorFor(o.type()));
-            bd.setViewRange(4f); // násobek 64 bloků
+            bd.setViewRange(4f); // multiplier of 64 blocks
             bd.setTransformation(new Transformation(
                     new Vector3f(0.2f, 0.2f, 0.2f), new AxisAngle4f(),
                     new Vector3f(0.6f, 0.6f, 0.6f), new AxisAngle4f()));
@@ -194,7 +194,7 @@ public final class XRayPlugin extends JavaPlugin implements Listener, CommandExe
         s.shown.clear();
     }
 
-    // ---------- skenování chunků ----------
+    // ---------- chunk scanning ----------
 
     private static long chunkKey(int cx, int cz) {
         return ((long) cx << 32) | (cz & 0xFFFFFFFFL);
@@ -248,7 +248,7 @@ public final class XRayPlugin extends JavaPlugin implements Listener, CommandExe
         return out;
     }
 
-    // ---------- barvy ----------
+    // ---------- colors ----------
 
     private static Color colorFor(Material m) {
         String n = m.name();
@@ -265,7 +265,7 @@ public final class XRayPlugin extends JavaPlugin implements Listener, CommandExe
         return Color.PURPLE;
     }
 
-    // ---------- události ----------
+    // ---------- events ----------
 
     @EventHandler
     public void onChunkUnload(ChunkUnloadEvent e) {

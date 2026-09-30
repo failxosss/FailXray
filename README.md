@@ -1,49 +1,49 @@
 # XRay
 
-Admin plugin pro **Paper 1.21+**. Příkazem `/xray` se adminovi zobrazí všechny rudy v okolí (výchozí dosah 200 bloků) a zobrazení se aktualizuje každé 2 sekundy.
+Admin plugin for **Paper 1.21+**. The `/xray` command shows an admin all ores around them (default radius 200 blocks) and refreshes the view every 2 seconds.
 
-## Funkce
-- Rudy jsou vidět skrz zdi jako barevně svítící kostky (každá ruda má svou barvu)
-- Kostky vidí jen admin, který má X-Ray zapnuté
-- Automatická aktualizace každé 2 s (vytěžená ruda zmizí)
-- Asynchronní skenování chunků s cache, minimální zátěž hlavního vlákna
+## Features
+- Ores are visible through walls as glowing colored cubes (each ore type has its own color)
+- Only the admin who enabled X-Ray can see the cubes
+- Automatic refresh every 2 s (mined ores disappear)
+- Asynchronous chunk scanning with a cache, minimal load on the main thread
 
-## Instalace
-1. Stáhni `XRay-*.jar` z [Releases](../../releases) (nebo z artefaktu v záložce Actions)
-2. Vlož do složky `plugins/`
-3. Restartuj server
+## Installation
+1. Download `XRay-*.jar` from [Releases](../../releases) (or from the artifact in the Actions tab)
+2. Put it in your `plugins/` folder
+3. Restart the server
 
-## Použití
-| Příkaz | Popis | Oprávnění |
-|--------|-------|-----------|
-| `/xray` | Zapne / vypne X-Ray | `xray.use` (výchozí: OP) |
+## Usage
+| Command | Description | Permission |
+|---------|-------------|------------|
+| `/xray` | Toggles X-Ray on/off | `xray.use` (default: OP) |
 
-## Konfigurace (`plugins/XRay/config.yml`)
+## Configuration (`plugins/XRay/config.yml`)
 ```yaml
-radius: 200               # dosah v blocích
-update-interval-ticks: 40 # 40 ticků = 2 s
-max-entities: 2000        # max. zobrazených rud naráz (nejbližší mají přednost)
-chunks-per-tick: 4        # rychlost skenování chunků
+radius: 200               # radius in blocks
+update-interval-ticks: 40 # 40 ticks = 2 s
+max-entities: 2000        # max ores shown at once (nearest first)
+chunks-per-tick: 4        # chunk scanning speed
 ```
 
-## Poznámky
-- Plugin vidí jen načtené chunky, dosah tedy omezuje `view-distance` serveru (pro 200 bloků alespoň 13).
-- Pokud kostky vidíš jen zblízka, zvyš `entity-tracking-range` v `spigot.yml`.
-- Vyžaduje Paper (nebo fork, např. Purpur), na čistém Spigotu nefunguje.
+## Notes
+- The plugin only sees loaded chunks, so the effective radius is limited by the server's `view-distance` (at least 13 for 200 blocks).
+- If you only see the cubes up close, increase `entity-tracking-range` in `spigot.yml`.
+- Requires Paper (or a fork such as Purpur). It does not work on plain Spigot.
 
-## Sestavení
-Potřebuješ Java 21 a Maven:
+## Building
+You need Java 21 and Maven:
 ```bash
 mvn package
 ```
-Výsledek: `target/XRay-1.0.0.jar`
+Output: `target/XRay-1.0.0.jar`
 
-## Vydání nové verze
+## Releasing a new version
 ```bash
 git tag v1.0.0
 git push origin v1.0.0
 ```
-GitHub Actions jar automaticky sestaví a přiloží k Release.
+GitHub Actions builds the jar automatically and attaches it to the Release.
 
-## Licence
+## License
 MIT
