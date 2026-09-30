@@ -1,6 +1,6 @@
 name: FailXray
 version: 1.0.0
-main: cz.xray.XRayPlugin
+main: cz.failxos.failxray.FailXrayPlugin
 api-version: '1.21'
 author: Failxos
 description: Admin X-Ray - shows nearby ores and refreshes them every 2 seconds

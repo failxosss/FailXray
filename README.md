@@ -1,4 +1,4 @@
-# XRay
+# FailXray
 
 Admin plugin for **Paper 1.21+**. The `/xray` command shows an admin all ores around them (default radius 200 blocks) and refreshes the view every 2 seconds.
 
@@ -10,7 +10,7 @@ Admin plugin for **Paper 1.21+**. The `/xray` command shows an admin all ores ar
 - Asynchronous chunk scanning with a cache, minimal load on the main thread
 
 ## Installation
-1. Download `XRay-*.jar` from [Releases](../../releases) (or from the artifact in the Actions tab)
+1. Download `FailXray-*.jar` from [Releases](../../releases) (or from the artifact in the Actions tab)
 2. Put it in your `plugins/` folder
 3. Restart the server
 
@@ -25,7 +25,7 @@ Admin plugin for **Paper 1.21+**. The `/xray` command shows an admin all ores ar
 
 Available ores: `coal`, `iron`, `copper`, `gold`, `redstone`, `lapis`, `diamond`, `emerald`, `quartz`, `debris` (ancient debris). Each type includes its deepslate/nether variants. Tab completion is supported. While X-Ray is on, running `/xray <ore>` again just changes the filter.
 
-## Configuration (`plugins/XRay/config.yml`)
+## Configuration (`plugins/FailXray/config.yml`)
 ```yaml
 radius: 200               # radius in blocks
 update-interval-ticks: 40 # 40 ticks = 2 s
@@ -44,7 +44,7 @@ You need Java 21 and Maven:
 ```bash
 mvn package
 ```
-Output: `target/XRay-1.0.0.jar`
+Output: `target/FailXray-1.0.0.jar`
 
 ## Releasing a new version
 ```bash
@@ -52,6 +52,9 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 GitHub Actions builds the jar automatically and attaches it to the Release.
+
+## Author
+Failxos
 
 ## License
 MIT

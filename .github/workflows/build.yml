@@ -26,11 +26,11 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: XRay
-          path: target/XRay-*.jar
+          name: FailXray
+          path: target/FailXray-*.jar
 
       - name: Release (tags v* only)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: target/XRay-*.jar
+          files: target/FailXray-*.jar

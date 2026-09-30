@@ -1,4 +1,4 @@
-package cz.xray;
+package cz.failxos.failxray;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChunkSnapshot;
@@ -25,7 +25,7 @@ import org.joml.Vector3f;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public final class XRayPlugin extends JavaPlugin implements Listener, TabExecutor {
+public final class FailXrayPlugin extends JavaPlugin implements Listener, TabExecutor {
 
     record OrePos(int x, int y, int z, Material type) {}
 
@@ -130,7 +130,7 @@ public final class XRayPlugin extends JavaPlugin implements Listener, TabExecuto
 
         if (first.equals("off")) {
             if (existing != null) disable(id, p);
-            else p.sendMessage("§cXRay is not enabled.");
+            else p.sendMessage("§cFailXray is not enabled.");
             return true;
         }
 
@@ -162,7 +162,7 @@ public final class XRayPlugin extends JavaPlugin implements Listener, TabExecuto
         s.filter.addAll(filter);
         sessions.put(p.getUniqueId(), s);
         String what = filter.isEmpty() ? "all ores" : String.join(", ", filter);
-        p.sendMessage("§aXRay enabled: §f" + what + " §7(radius " + radius + " blocks, updates every 2 s)");
+        p.sendMessage("§aFailXray enabled: §f" + what + " §7(radius " + radius + " blocks, updates every 2 s)");
         refresh(p, s);
     }
 
@@ -170,7 +170,7 @@ public final class XRayPlugin extends JavaPlugin implements Listener, TabExecuto
         Session s = sessions.remove(id);
         if (s != null) clear(s);
         removeNightVision(p);
-        p.sendMessage("§cXRay disabled.");
+        p.sendMessage("§cFailXray disabled.");
     }
 
     /** Maps user input (diamond, diamonds, ancient_debris, ...) to an ore group, or null. */
