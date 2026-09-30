@@ -1,0 +1,36 @@
+name: Build
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build
+        run: mvn -B package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: XRay
+          path: target/XRay-*.jar
+
+      - name: Release (jen pro tagy v*)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: target/XRay-*.jar

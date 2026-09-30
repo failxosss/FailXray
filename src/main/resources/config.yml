@@ -1,0 +1,8 @@
+# Dosah v blocich
+radius: 200
+# Jak casto se aktualizuje (v tickech, 40 = 2 sekundy)
+update-interval-ticks: 40
+# Maximalni pocet zobrazenych rud naraz (nejblizsi maji prednost)
+max-entities: 2000
+# Kolik chunku se za 1 tick naskenuje (vetsi = rychlejsi prvni sken, vetsi zatez)
+chunks-per-tick: 4

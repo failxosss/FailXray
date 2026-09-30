@@ -1,0 +1,14 @@
+name: XRay
+version: 1.0.0
+main: cz.xray.XRayPlugin
+api-version: '1.21'
+description: Admin X-Ray - zobrazi rudy v okoli a aktualizuje je kazde 2 sekundy
+commands:
+  xray:
+    description: Zapne/vypne X-Ray
+    usage: /xray
+    permission: xray.use
+permissions:
+  xray.use:
+    description: Pouziti /xray
+    default: op
