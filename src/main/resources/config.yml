@@ -6,3 +6,5 @@ update-interval-ticks: 40
 max-entities: 2000
 # How many chunks are scanned per tick (higher = faster first scan, more load)
 chunks-per-tick: 4
+# Give infinite night vision while X-Ray is enabled (removed when disabled)
+night-vision: true

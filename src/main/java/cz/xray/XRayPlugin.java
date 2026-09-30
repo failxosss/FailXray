@@ -7,7 +7,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
@@ -16,6 +16,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Transformation;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
@@ -23,7 +25,7 @@ import org.joml.Vector3f;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public final class XRayPlugin extends JavaPlugin implements Listener, CommandExecutor {
+public final class XRayPlugin extends JavaPlugin implements Listener, TabExecutor {
 
     record OrePos(int x, int y, int z, Material type) {}
 
@@ -31,17 +33,35 @@ public final class XRayPlugin extends JavaPlugin implements Listener, CommandExe
 
     private static final class Session {
         World world;
+        final Set<String> filter = new LinkedHashSet<>(); // empty = all ores
         final Map<OrePos, BlockDisplay> shown = new HashMap<>();
     }
 
+    private static final List<String> GROUPS = List.of(
+            "coal", "iron", "copper", "gold", "redstone", "lapis",
+            "diamond", "emerald", "quartz", "debris");
+
     private static final Set<Material> ORES = EnumSet.noneOf(Material.class);
+    private static final Map<Material, String> GROUP_OF = new EnumMap<>(Material.class);
 
     static {
         for (Material m : Material.values()) {
             if (m.isLegacy()) continue;
             String n = m.name();
-            if (n.endsWith("_ORE") || m == Material.ANCIENT_DEBRIS) ORES.add(m);
+            if (n.endsWith("_ORE") || m == Material.ANCIENT_DEBRIS) {
+                ORES.add(m);
+                GROUP_OF.put(m, groupOf(m));
+            }
         }
+    }
+
+    private static String groupOf(Material m) {
+        if (m == Material.ANCIENT_DEBRIS) return "debris";
+        String n = m.name().toLowerCase();
+        for (String g : GROUPS) {
+            if (n.contains(g)) return g;
+        }
+        return "other";
     }
 
     private final Map<UUID, Session> sessions = new HashMap<>();
@@ -52,6 +72,7 @@ public final class XRayPlugin extends JavaPlugin implements Listener, CommandExe
     private int radius;
     private int maxEntities;
     private int chunksPerTick;
+    private boolean nightVision;
 
     @Override
     public void onEnable() {
@@ -59,6 +80,7 @@ public final class XRayPlugin extends JavaPlugin implements Listener, CommandExe
         radius = getConfig().getInt("radius", 200);
         maxEntities = getConfig().getInt("max-entities", 2000);
         chunksPerTick = getConfig().getInt("chunks-per-tick", 4);
+        nightVision = getConfig().getBoolean("night-vision", true);
         int interval = getConfig().getInt("update-interval-ticks", 40);
 
         getServer().getPluginManager().registerEvents(this, this);
@@ -70,7 +92,11 @@ public final class XRayPlugin extends JavaPlugin implements Listener, CommandExe
 
     @Override
     public void onDisable() {
-        for (Session s : sessions.values()) clear(s);
+        for (Map.Entry<UUID, Session> e : sessions.entrySet()) {
+            clear(e.getValue());
+            Player p = Bukkit.getPlayer(e.getKey());
+            if (p != null) removeNightVision(p);
+        }
         sessions.clear();
     }
 
@@ -86,16 +112,107 @@ public final class XRayPlugin extends JavaPlugin implements Listener, CommandExe
             p.sendMessage("§cYou don't have permission.");
             return true;
         }
-        Session existing = sessions.remove(p.getUniqueId());
-        if (existing != null) {
-            clear(existing);
-            p.sendMessage("§cXRay disabled.");
-        } else {
-            sessions.put(p.getUniqueId(), new Session());
-            p.sendMessage("§aXRay enabled §7(radius " + radius + " blocks, updates every 2 s).");
-            refresh(p, sessions.get(p.getUniqueId()));
+
+        UUID id = p.getUniqueId();
+        Session existing = sessions.get(id);
+
+        // /xray  -> toggle (all ores)
+        if (args.length == 0) {
+            if (existing != null) {
+                disable(id, p);
+            } else {
+                enable(p, new Session(), Set.of());
+            }
+            return true;
         }
+
+        String first = args[0].toLowerCase();
+
+        if (first.equals("off")) {
+            if (existing != null) disable(id, p);
+            else p.sendMessage("§cXRay is not enabled.");
+            return true;
+        }
+
+        if (first.equals("list")) {
+            p.sendMessage("§eAvailable ores: §f" + String.join(", ", GROUPS));
+            p.sendMessage("§7Usage: /xray [ore ...] | /xray all | /xray off");
+            return true;
+        }
+
+        // /xray all | /xray <ore> [ore ...]
+        Set<String> wanted = new LinkedHashSet<>();
+        if (!first.equals("all")) {
+            for (String arg : args) {
+                String g = normalize(arg);
+                if (g == null) {
+                    p.sendMessage("§cUnknown ore: §f" + arg);
+                    p.sendMessage("§eAvailable ores: §f" + String.join(", ", GROUPS));
+                    return true;
+                }
+                wanted.add(g);
+            }
+        }
+        enable(p, existing != null ? existing : new Session(), wanted);
         return true;
+    }
+
+    private void enable(Player p, Session s, Set<String> filter) {
+        s.filter.clear();
+        s.filter.addAll(filter);
+        sessions.put(p.getUniqueId(), s);
+        String what = filter.isEmpty() ? "all ores" : String.join(", ", filter);
+        p.sendMessage("§aXRay enabled: §f" + what + " §7(radius " + radius + " blocks, updates every 2 s)");
+        refresh(p, s);
+    }
+
+    private void disable(UUID id, Player p) {
+        Session s = sessions.remove(id);
+        if (s != null) clear(s);
+        removeNightVision(p);
+        p.sendMessage("§cXRay disabled.");
+    }
+
+    /** Maps user input (diamond, diamonds, ancient_debris, ...) to an ore group, or null. */
+    private static String normalize(String input) {
+        String a = input.toLowerCase().replace("-", "_");
+        if (a.equals("ancient_debris") || a.equals("netherite")) return "debris";
+        if (GROUPS.contains(a)) return a;
+        if (a.endsWith("s") && GROUPS.contains(a.substring(0, a.length() - 1))) {
+            return a.substring(0, a.length() - 1);
+        }
+        return null;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
+        if (!sender.hasPermission("xray.use")) return List.of();
+        String current = args[args.length - 1].toLowerCase();
+        List<String> options = new ArrayList<>(GROUPS);
+        if (args.length == 1) {
+            options.add("all");
+            options.add("off");
+            options.add("list");
+        } else {
+            for (int i = 0; i < args.length - 1; i++) options.remove(args[i].toLowerCase());
+        }
+        options.removeIf(o -> !o.startsWith(current));
+        return options;
+    }
+
+    // ---------- night vision ----------
+
+    private void giveNightVision(Player p) {
+        if (!nightVision) return;
+        PotionEffect current = p.getPotionEffect(PotionEffectType.NIGHT_VISION);
+        if (current != null && current.getDuration() == PotionEffect.INFINITE_DURATION) return;
+        p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION,
+                PotionEffect.INFINITE_DURATION, 0, false, false, false));
+    }
+
+    private void removeNightVision(Player p) {
+        if (!nightVision) return;
+        p.removePotionEffect(PotionEffectType.NIGHT_VISION);
     }
 
     // ---------- updating ----------
@@ -115,6 +232,7 @@ public final class XRayPlugin extends JavaPlugin implements Listener, CommandExe
     }
 
     private void refresh(Player p, Session s) {
+        giveNightVision(p);
         World w = p.getWorld();
         if (s.world != w) {
             clear(s);
@@ -138,6 +256,7 @@ public final class XRayPlugin extends JavaPlugin implements Listener, CommandExe
                     continue;
                 }
                 for (OrePos o : list) {
+                    if (!s.filter.isEmpty() && !s.filter.contains(GROUP_OF.get(o.type()))) continue;
                     if (dist2(o, px, py, pz) <= r2) candidates.add(o);
                 }
             }
@@ -276,6 +395,9 @@ public final class XRayPlugin extends JavaPlugin implements Listener, CommandExe
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         Session s = sessions.remove(e.getPlayer().getUniqueId());
-        if (s != null) clear(s);
+        if (s != null) {
+            clear(s);
+            removeNightVision(e.getPlayer());
+        }
     }
 }

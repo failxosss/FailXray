@@ -1,12 +1,13 @@
-name: XRay
+name: FailXray
 version: 1.0.0
 main: cz.xray.XRayPlugin
 api-version: '1.21'
+author: Failxos
 description: Admin X-Ray - shows nearby ores and refreshes them every 2 seconds
 commands:
   xray:
-    description: Toggles X-Ray
-    usage: /xray
+    description: Toggles X-Ray, optionally only for chosen ores
+    usage: /xray [ore ...|all|off|list]
     permission: xray.use
 permissions:
   xray.use:

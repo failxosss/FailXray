@@ -6,6 +6,7 @@ Admin plugin for **Paper 1.21+**. The `/xray` command shows an admin all ores ar
 - Ores are visible through walls as glowing colored cubes (each ore type has its own color)
 - Only the admin who enabled X-Ray can see the cubes
 - Automatic refresh every 2 s (mined ores disappear)
+- Infinite night vision while X-Ray is on (removed when you turn it off; can be disabled in config)
 - Asynchronous chunk scanning with a cache, minimal load on the main thread
 
 ## Installation
@@ -16,7 +17,13 @@ Admin plugin for **Paper 1.21+**. The `/xray` command shows an admin all ores ar
 ## Usage
 | Command | Description | Permission |
 |---------|-------------|------------|
-| `/xray` | Toggles X-Ray on/off | `xray.use` (default: OP) |
+| `/xray` | Toggles X-Ray on/off (all ores) | `xray.use` (default: OP) |
+| `/xray <ore> [ore ...]` | Shows only the chosen ores, e.g. `/xray diamond` or `/xray gold emerald` | `xray.use` |
+| `/xray all` | Shows all ores again | `xray.use` |
+| `/xray off` | Disables X-Ray | `xray.use` |
+| `/xray list` | Lists available ore types | `xray.use` |
+
+Available ores: `coal`, `iron`, `copper`, `gold`, `redstone`, `lapis`, `diamond`, `emerald`, `quartz`, `debris` (ancient debris). Each type includes its deepslate/nether variants. Tab completion is supported. While X-Ray is on, running `/xray <ore>` again just changes the filter.
 
 ## Configuration (`plugins/XRay/config.yml`)
 ```yaml
@@ -24,6 +31,7 @@ radius: 200               # radius in blocks
 update-interval-ticks: 40 # 40 ticks = 2 s
 max-entities: 2000        # max ores shown at once (nearest first)
 chunks-per-tick: 4        # chunk scanning speed
+night-vision: true        # infinite night vision while X-Ray is enabled
 ```
 
 ## Notes
